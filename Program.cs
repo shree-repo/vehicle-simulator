@@ -67,9 +67,7 @@ namespace VehicleSimulator
     {
         private List<Route> _routes;
         private int _currentRouteIndex;
-        private float _currentSpeed = 0F;
-        private float _accelerationKph = 5.4F;
-        private float _brakeKph = 9.0F;
+        private float _currentSpeed = 0F; // in m/s
         private string _url;
 
         public RouteTracker(string csvFile, string url)
@@ -103,32 +101,28 @@ namespace VehicleSimulator
         {
             float latitude = float.Parse(_routes[_currentRouteIndex].latitude);
             float longitude = float.Parse(_routes[_currentRouteIndex].longitude);
-            float speedlimit = int.Parse(_routes[_currentRouteIndex].speedlimit);
-            _CalculateSpeed(speedlimit);
+            _CalculateSpeed();
             float course = string.IsNullOrEmpty(_routes[_currentRouteIndex].course) ? 0 : float.Parse(_routes[_currentRouteIndex].course);
-            return new WayPoint(latitude, longitude, _currentSpeed, course);
+            return new WayPoint(latitude, longitude, _currentSpeed * 18 / 5, course);
         }
 
-        private void _CalculateSpeed(float speedlimit)
+        private void _CalculateSpeed()
         {
-            if (_currentRouteIndex > 0)
+            if (_currentRouteIndex < _routes.Count - 1)
             {
-                if (_currentSpeed < speedlimit)
+                int nextWayPointIndex = _currentRouteIndex + 1;
+                float speedLimit = float.Parse(_routes[nextWayPointIndex].speedlimit) * 5 / 18; 
+                if (_currentSpeed <= speedLimit)
                 {
-                    _currentSpeed += _accelerationKph;
-                    if (_currentSpeed > speedlimit)
-                    {
-                        _currentSpeed = speedlimit;
-                    }
+                    _currentSpeed += 1.5F;
+                    _currentSpeed = Math.Min(_currentSpeed, speedLimit);
                 }
-                else if (_currentSpeed > speedlimit)
+                else
                 {
-                    _currentSpeed -= _brakeKph;
-                    if (_currentSpeed < speedlimit)
-                    {
-                        _currentSpeed = speedlimit;
-                    }
+                    _currentSpeed -= 2.5F;
+                    _currentSpeed = Math.Max(_currentSpeed, speedLimit);
                 }
+
             }
         }
     }
